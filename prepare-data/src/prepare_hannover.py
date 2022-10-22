@@ -74,7 +74,7 @@ def crop_and_save(images_path, masks_path, new_images_path, new_masks_path, img_
         round((time.time() - start_time), 2), new_images_path, new_masks_path))
     print("\n{} Images were skipped.".format(num_skipped))
 
-def train_test_split(images_path, masks_path, test_split=0.3):
+def train_test_split(images_path, masks_path, extended_images, extended_masks, test_split=0.3):
     """
     same as in build_dataset.py with minor adjustments
     """
@@ -84,8 +84,8 @@ def train_test_split(images_path, masks_path, test_split=0.3):
     np.random.shuffle(image_filenames)
 
     root_path = os.path.dirname(os.path.dirname(images_path)) + "/"
-    train_dir = root_path + "_Train/"
-    test_dir = root_path + "_Test/"
+    train_dir = root_path + extended_images
+    test_dir = root_path + extended_masks
 
     if not os.path.exists(train_dir):
         print("CREATING:", train_dir)
@@ -126,6 +126,8 @@ if __name__ == "__main__":
     masks_path = root_data_path + "Masks/"
     new_images_path = root_data_path + "Images/"
     new_masks_path = root_data_path + "Masks/"
+    extended_images = "_Train/"
+    extended_masks = "_Test/"
 
     for path in [new_images_path, new_masks_path]:
         if not os.path.exists(path):
@@ -136,4 +138,4 @@ if __name__ == "__main__":
 
     #splitSource("./Hannover/source_train/", "./Hannover/Images/", "./Hannover/Masks/")
     crop_and_save(images_path, masks_path, new_images_path, new_masks_path, img_width, img_height)
-    train_test_split(new_images_path, new_masks_path, test_to_train_ratio)
+    train_test_split(new_images_path, new_masks_path, extended_images, extended_masks, test_to_train_ratio)
