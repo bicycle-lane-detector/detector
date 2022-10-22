@@ -1,0 +1,139 @@
+import numpy as np
+
+from tqdm import tqdm
+import os
+import cv2
+import time
+import math
+
+from PIL import Image
+
+def splitSource(source, destImg, destMasks):
+    files = next(os.walk(source))[2]
+    print('Total number of files =', len(files))
+
+    for n, file in enumerate(tqdm(files, total=len(files))):
+        if n % 3 == 0:
+            os.rename(source + file, destMasks + file[:-4] + ".png")
+        elif n % 3 == 1:
+            os.rename(source + file, destImg + file[:-4] + ".tif")
+
+
+def crop_and_save(images_path, masks_path, new_images_path, new_masks_path, img_width, img_height):
+    """
+    same as in build_dataset.py with minor adjustments
+    """
+
+    print("Building Dataset.")
+
+    num_skipped = 0
+    start_time = time.time()
+    files = next(os.walk(images_path))[2]
+    print('Total number of files =', len(files))
+
+    for image_file in tqdm(files, total=len(files)):
+
+        image_path = images_path + image_file
+        image = cv2.imread(image_path)
+
+        mask_path = masks_path + image_file[:-3] + "png"
+        mask = cv2.imread(mask_path, 0)
+
+        num_splits = math.floor((image.shape[0] * image.shape[1]) / (img_width * img_height))
+        counter = 0
+
+        for r in range(0, image.shape[0], img_height):
+            for c in range(0, image.shape[1], img_width):
+                counter += 1
+                blank_image = np.zeros((img_height, img_width, 3), dtype=np.uint8)
+                blank_mask = np.zeros((img_height, img_width), dtype=np.uint8)
+
+                new_image_path = new_images_path + str(counter) + '_' + image_file
+                new_mask_path = new_masks_path + str(counter) + '_' + image_file[:-3] + "png"
+
+                new_image = np.array(image[r:r + img_height, c:c + img_width, :])
+                new_mask = np.array(mask[r:r + img_height, c:c + img_width])
+
+                blank_image[:new_image.shape[0], :new_image.shape[1], :] += new_image
+                blank_mask[:new_image.shape[0], :new_image.shape[1]] += new_mask
+
+                blank_mask[blank_mask > 1] = 255
+
+                # Skip any Image that is more than 99% empty.
+                if np.any(blank_mask):
+                    num_black_pixels, num_white_pixels = np.unique(blank_mask, return_counts=True)[1]
+
+                    if num_white_pixels / num_black_pixels < 0.01:
+                        num_skipped += 1
+                        continue
+
+                    cv2.imwrite(new_image_path, blank_image)
+                    cv2.imwrite(new_mask_path, blank_mask)
+
+    print("EXPORT COMPLETE: {} seconds.\nImages exported to {}\nMasks exported to{}".format(
+        round((time.time() - start_time), 2), new_images_path, new_masks_path))
+    print("\n{} Images were skipped.".format(num_skipped))
+
+def train_test_split(images_path, masks_path, test_split=0.3):
+    """
+    same as in build_dataset.py with minor adjustments
+    """
+
+    image_filenames = [filename for filename in os.walk(images_path)][0][2]
+    test_set_size = int(test_split * len(image_filenames))
+    np.random.shuffle(image_filenames)
+
+    root_path = os.path.dirname(os.path.dirname(images_path)) + "/"
+    train_dir = root_path + "_Train/"
+    test_dir = root_path + "_Test/"
+
+    if not os.path.exists(train_dir):
+        print("CREATING:", train_dir)
+        os.makedirs(train_dir + "Images/samples/")
+        os.makedirs(train_dir + "Masks/samples/")
+
+    if not os.path.exists(test_dir):
+        print("CREATING:", test_dir)
+        os.makedirs(test_dir + "Images/samples/")
+        os.makedirs(test_dir + "Masks/samples/")
+
+    train_image_dir = train_dir + "Images/samples/"
+    train_mask_dir = train_dir + "Masks/samples/"
+    test_image_dir = test_dir + "Images/samples/"
+    test_mask_dir = test_dir + "Masks/samples/"
+
+    for n, filename in enumerate(image_filenames):
+        if n < test_set_size:
+            os.rename(images_path + filename, test_image_dir + filename)
+            os.rename(masks_path + filename[:-3] + "png", test_mask_dir + filename[:-3] + "png")
+        else:
+            os.rename(images_path + filename, train_image_dir + filename)
+            os.rename(masks_path + filename[:-3] + "png", train_mask_dir + filename[:-3] + "png")
+
+    print("Train-Test-Split COMPLETED.\nNUMBER OF IMAGES IN TRAIN SET:{}\nNUMBER OF IMAGES IN TEST SET: {}".format(
+        len(image_filenames) - test_set_size, test_set_size))
+    print("\nTrain Directory:", train_dir)
+    print("Test Directory:", test_dir)
+
+if __name__ == "__main__":
+    root_data_path = "./Hannover/"
+    test_to_train_ratio = 0.2
+    img_width = img_height = 256 #* 2 * 2
+    num_channels = 3
+
+    # Path Information
+    images_path = root_data_path + "Images/"
+    masks_path = root_data_path + "Masks/"
+    new_images_path = root_data_path + "Images/"
+    new_masks_path = root_data_path + "Masks/"
+
+    for path in [new_images_path, new_masks_path]:
+        if not os.path.exists(path):
+            os.mkdir(path)
+            print("DIRECTORY CREATED: {}".format(path))
+        else:
+            print("DIRECTORY ALREADY EXISTS: {}".format(path))
+
+    #splitSource("./Hannover/source_train/", "./Hannover/Images/", "./Hannover/Masks/")
+    crop_and_save(images_path, masks_path, new_images_path, new_masks_path, img_width, img_height)
+    train_test_split(new_images_path, new_masks_path, test_to_train_ratio)
