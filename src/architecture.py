@@ -21,13 +21,13 @@ def create_callbacks(backup_model_path: str) -> tuple[any,any,any]:
 
     earlystopper = EarlyStopping(monitor='val_loss',
                                  min_delta=0,
-                                 patience=5,
+                                 patience=7,
                                  verbose=1,
                                  restore_best_weights=True)
 
     lr_reducer = ReduceLROnPlateau(monitor='val_loss',
                                    factor=0.1,
-                                   patience=4,
+                                   patience=5,
                                    verbose=1,
                                    min_delta=1e-4)
 
@@ -35,40 +35,45 @@ def create_callbacks(backup_model_path: str) -> tuple[any,any,any]:
 
 
 def create_model(image_height: int, image_width: int) -> Model:
+    dropout_prob_l1 = 0.2 #0.1
+    dropout_prob_l2 = 0.4 #0.2
+    dropout_prob_l3 = 0.6 #0.3
+
+
     inputs = Input(shape=(image_height, image_width, 3))
     s = Lambda(lambda x: x / 255) (inputs)
 
     conv1 = Conv2D(16, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (inputs)
     conv1 = BatchNormalization() (conv1)
-    conv1 = Dropout(0.1) (conv1)
+    conv1 = Dropout(dropout_prob_l1) (conv1)
     conv1 = Conv2D(16, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (conv1)
     conv1 = BatchNormalization() (conv1)
     pooling1 = MaxPooling2D((2, 2)) (conv1)
 
     conv2 = Conv2D(32, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (pooling1)
     conv2 = BatchNormalization() (conv2)
-    conv2 = Dropout(0.1) (conv2)
+    conv2 = Dropout(dropout_prob_l1) (conv2)
     conv2 = Conv2D(32, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (conv2)
     conv2 = BatchNormalization() (conv2)
     pooling2 = MaxPooling2D((2, 2)) (conv2)
 
     conv3 = Conv2D(64, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (pooling2)
     conv3 = BatchNormalization() (conv3)
-    conv3 = Dropout(0.2) (conv3)
+    conv3 = Dropout(dropout_prob_l2) (conv3)
     conv3 = Conv2D(64, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (conv3)
     conv3 = BatchNormalization() (conv3)
     pooling3 = MaxPooling2D((2, 2)) (conv3)
 
     conv4 = Conv2D(128, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (pooling3)
     conv4 = BatchNormalization() (conv4)
-    conv4 = Dropout(0.2) (conv4)
+    conv4 = Dropout(dropout_prob_l2) (conv4)
     conv4 = Conv2D(128, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (conv4)
     conv4 = BatchNormalization() (conv4)
     pooling4 = MaxPooling2D(pool_size=(2, 2)) (conv4)
 
     conv5 = Conv2D(256, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (pooling4)
     conv5 = BatchNormalization() (conv5)
-    conv5 = Dropout(0.3) (conv5)
+    conv5 = Dropout(dropout_prob_l3) (conv5)
     conv5 = Conv2D(256, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (conv5)
     conv5 = BatchNormalization() (conv5)
 
@@ -77,7 +82,7 @@ def create_model(image_height: int, image_width: int) -> Model:
     upsample6 = concatenate([upsample6, conv4])
     conv6 = Conv2D(128, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (upsample6)
     conv6 = BatchNormalization() (conv6)
-    conv6 = Dropout(0.2) (conv6)
+    conv6 = Dropout(dropout_prob_l2) (conv6)
     conv6 = Conv2D(128, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (conv6)
     conv6 = BatchNormalization() (conv6)
 
@@ -85,7 +90,7 @@ def create_model(image_height: int, image_width: int) -> Model:
     upsample7 = concatenate([upsample7, conv3])
     conv7 = Conv2D(64, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (upsample7)
     conv7 = BatchNormalization() (conv7)
-    conv7 = Dropout(0.2) (conv7)
+    conv7 = Dropout(dropout_prob_l2) (conv7)
     conv7 = Conv2D(64, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (conv7)
     conv7 = BatchNormalization() (conv7)
 
@@ -93,7 +98,7 @@ def create_model(image_height: int, image_width: int) -> Model:
     upsample8 = concatenate([upsample8, conv2])
     conv8 = Conv2D(32, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (upsample8)
     conv8 = BatchNormalization() (conv8)
-    conv8 = Dropout(0.1) (conv8)
+    conv8 = Dropout(dropout_prob_l1) (conv8)
     conv8 = Conv2D(32, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (conv8)
     conv8 = BatchNormalization() (conv8)
 
@@ -101,7 +106,7 @@ def create_model(image_height: int, image_width: int) -> Model:
     upsample9 = concatenate([upsample9, conv1], axis=3)
     conv9 = Conv2D(16, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (upsample9)
     conv9 = BatchNormalization() (conv9)
-    conv9 = Dropout(0.1) (conv9)
+    conv9 = Dropout(dropout_prob_l1) (conv9)
     conv9 = Conv2D(16, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same') (conv9)
     conv9 = BatchNormalization() (conv9)
 

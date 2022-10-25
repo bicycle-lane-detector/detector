@@ -1,0 +1,2 @@
+worse performance than original model from scratch. Batch size 16 didn't do anything against the divergence phenomenon.
+Nichtskalierte bilder (52 stück) wurden entfernt -> vielleicht war das für die schlechtere performance verantwortlich => augmentation probieren?

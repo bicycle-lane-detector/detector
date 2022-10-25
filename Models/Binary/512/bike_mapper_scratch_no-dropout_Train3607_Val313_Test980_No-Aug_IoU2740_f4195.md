@@ -1,0 +1,1 @@
+training iou score went up to a whopping 44%. So perhaps doubling the dropout will help
