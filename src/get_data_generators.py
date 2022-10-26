@@ -21,7 +21,7 @@ class Generator:
         self.samplesPerBatch = samples / batch_size
 
 
-def getDataGenerators(augmentation_parameters, img_size, train_images_path=None, train_targets_path=None, test_images_path=None, test_targets_path=None, batch_size = 64, seed=42) -> list[Generator]:
+def getDataGenerators(augmentation_parameters, img_size, train_images_path=None, train_targets_path=None, test_images_path=None, test_targets_path=None, batch_size = 64, seed=42, preprocess_function: any = None) -> list[Generator]:
     """
         Builds and returns ImageDataGenerators based on the paths that are sepcified.
         Each Generator will have data and size. Data goes int
@@ -59,15 +59,20 @@ def getDataGenerators(augmentation_parameters, img_size, train_images_path=None,
 
     generators = []
 
+    normalize255 = lambda a : a/255
+
+    preprocess_masks = (lambda a: preprocess_function(normalize255(a))) if preprocess_function is not None else normalize255
+
     def get_boolean(string):
         if string == "True":
             return True
         elif string == "False":
             return False
        
-    if train_images_path and  train_targets_path:
+    if train_images_path and train_targets_path:
 
         train_datagen = ImageDataGenerator(
+                                            preprocessing_function=preprocess_function,
                                             #featurewise_center=get_boolean(augmentation_parameters["featurewise_center"]),
                                             #samplewise_center=get_boolean(augmentation_parameters["samplewise_center"]),
                                             #featurewise_std_normalization=get_boolean(augmentation_parameters["featurewise_std_normalization"]),
@@ -106,7 +111,7 @@ def getDataGenerators(augmentation_parameters, img_size, train_images_path=None,
                                                                            seed = seed
                                                                       )
 
-        train_datagen.preprocessing_function = lambda a : a/255
+        train_datagen.preprocessing_function = preprocess_masks
 
         train_target_generator = train_datagen.flow_from_directory( target_size= img_size,
                                                                  directory = train_targets_path,
@@ -135,11 +140,8 @@ def getDataGenerators(augmentation_parameters, img_size, train_images_path=None,
 
     
     if test_images_path and  test_targets_path:
-        
-    
-        test_datagen = ImageDataGenerator(
-                                           )
 
+        test_datagen = ImageDataGenerator(preprocessing_function=preprocess_function)
 
         test_image_generator = test_datagen.flow_from_directory( target_size= img_size,
                                                                   directory = test_images_path,
@@ -149,7 +151,7 @@ def getDataGenerators(augmentation_parameters, img_size, train_images_path=None,
                                                                   seed = seed
                                                               )
 
-        test_datagen.preprocessing_function = lambda s: s / 255
+        test_datagen.preprocessing_function = preprocess_masks
 
         test_target_generator = test_datagen.flow_from_directory( target_size= img_size,
                                                                   directory = test_targets_path,
