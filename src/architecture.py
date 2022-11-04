@@ -34,10 +34,10 @@ def create_callbacks(backup_model_path: str) -> tuple[any,any,any]:
     return checkpointer, earlystopper, lr_reducer
 
 
-def create_model(image_height: int, image_width: int) -> Model:
-    dropout_prob_l1 = 0.2 #0.1
-    dropout_prob_l2 = 0.4 #0.2
-    dropout_prob_l3 = 0.6 #0.3
+def create_model(image_height: int, image_width: int, dropout_factor: float = 1.) -> Model:
+    dropout_prob_l1 = dropout_factor * 0.1
+    dropout_prob_l2 = dropout_factor * 0.2
+    dropout_prob_l3 = dropout_factor * 0.3
 
 
     inputs = Input(shape=(image_height, image_width, 3))

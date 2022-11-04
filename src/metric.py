@@ -41,7 +41,8 @@ def quality(buffer:int = 15, threshold:float = 0.1) -> any:
             fp = np.sum(y_pred_binary) - tp
             fn = np.sum(y_true - np.multiply(y_true, y_pred_binary_buffered))
 
-            qual = tp / (tp + fp + fn)
+            denom = tp + fp + fn
+            qual = tp / denom if denom > 0.0001 or denom < -0.0001 else 1
             qual_sum += qual
 
         qual_avg = qual_sum / batch_size

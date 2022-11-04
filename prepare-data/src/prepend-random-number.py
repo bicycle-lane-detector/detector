@@ -17,7 +17,7 @@ def splitSource(img_path, mask_path, mask_extension):
         os.rename(mask_path + file[:-3] + mask_extension, mask_path + str(number) + "_" + file[:-3] + mask_extension)
 
 mask_extension = "png"
-img_path = "./Data/Hannover/_Train1024/Images/samples/"
-mask_path = "./Data/Hannover/_Train1024/Masks/samples/"
+img_path = "./Data/all-cities/_Train512/Images/samples/"
+mask_path = "./Data/all-cities/_Train512/Masks/samples/"
 
 splitSource(img_path, mask_path, mask_extension)

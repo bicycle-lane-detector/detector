@@ -111,7 +111,7 @@ def getDataGenerators(augmentation_parameters, img_size, train_images_path=None,
                                                                            seed = seed
                                                                       )
 
-        train_datagen.preprocessing_function = preprocess_masks
+        train_datagen.preprocessing_function = normalize255
 
         train_target_generator = train_datagen.flow_from_directory( target_size= img_size,
                                                                  directory = train_targets_path,
@@ -151,7 +151,7 @@ def getDataGenerators(augmentation_parameters, img_size, train_images_path=None,
                                                                   seed = seed
                                                               )
 
-        test_datagen.preprocessing_function = preprocess_masks
+        test_datagen.preprocessing_function = normalize255
 
         test_target_generator = test_datagen.flow_from_directory( target_size= img_size,
                                                                   directory = test_targets_path,

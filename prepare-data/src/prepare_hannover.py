@@ -116,18 +116,18 @@ def train_test_split(images_path, masks_path, extended_images, extended_masks, t
     print("Test Directory:", test_dir)
 
 if __name__ == "__main__":
-    root_data_path = "./Hannover/"
-    test_to_train_ratio = 0.2
-    img_width = img_height = 256 #* 2 * 2
+    root_data_path = "./Data/all-cities/"
+    test_to_train_ratio = 0.15
+    img_width = img_height = 256 * 2 #* 2
     num_channels = 3
 
     # Path Information
     images_path = root_data_path + "Images/"
     masks_path = root_data_path + "Masks/"
-    new_images_path = root_data_path + "Images/"
-    new_masks_path = root_data_path + "Masks/"
-    extended_images = "_Train/"
-    extended_masks = "_Test/"
+    new_images_path = root_data_path + "Images512/"
+    new_masks_path = root_data_path + "Masks512/"
+    extended_images = "_Train512/"
+    extended_masks = "_Test512/"
 
     for path in [new_images_path, new_masks_path]:
         if not os.path.exists(path):
@@ -136,6 +136,6 @@ if __name__ == "__main__":
         else:
             print("DIRECTORY ALREADY EXISTS: {}".format(path))
 
-    #splitSource("./Hannover/source_train/", "./Hannover/Images/", "./Hannover/Masks/")
+    splitSource(root_data_path + "source/", root_data_path + "Images/", root_data_path + "Masks/")
     crop_and_save(images_path, masks_path, new_images_path, new_masks_path, img_width, img_height)
     train_test_split(new_images_path, new_masks_path, extended_images, extended_masks, test_to_train_ratio)
