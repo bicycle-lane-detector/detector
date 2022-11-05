@@ -1,5 +1,6 @@
 # too much data to upload with git
 Data/
+Models/
 
 # don't store temporary backup file for model training
 Models/backup.h5
