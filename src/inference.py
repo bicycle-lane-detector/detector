@@ -1,4 +1,7 @@
-# Imports 
+# Imports
+import glob
+
+import keras
 import numpy as np
 
 from keras.models import load_model
@@ -28,7 +31,6 @@ def clean_up_predictions(preds) -> list:
     threshold = 0.50
     preds = preds * 255 #preds[preds > threshold] = 255
     preds = preds.astype('uint8')
-    print(np.unique(preds), preds[0].reshape((512,512)).shape)
     Image.fromarray(preds[0].reshape((512,512))).show()
     imgs = []
     for i in range(len(preds)):
@@ -38,23 +40,38 @@ def clean_up_predictions(preds) -> list:
         imgs.append(image)
     return imgs
 
-def predict(model, img_path) -> list:
-    # model = load_model("./Models/road_mapper_final.h5", custom_objects = {
-    #     "soft_dice_loss" : soft_dice_loss,
-    #     "iou_coef" : iou_coef,
-    #     "dice_coef_loss" : dice_coef_loss,
-    #     "dice_loss" : dice_coef_loss,
-    # })
-    i = Image.open(img_path)
-    i = i.convert("RGB")
-    img = np.array(i)
-    print(img.shape)
-    preds = model.predict(img.reshape((1,IMG_WIDTH, IMG_HEIGHT, CHANNELS)) / 255)
+def predict(model: keras.Model, img_path: str, threshold = 0.1) -> Image:
+    img = np.array(Image.open(img_path).convert("RGB"))
+    normalized = img.reshape((1, IMG_WIDTH, IMG_HEIGHT, CHANNELS)) / 255
+
+    preds = model.predict(normalized)
+
+    preds[preds > threshold] = 255
+    output = [Image.fromarray(pred.reshape((512,512))) for pred in preds]
+    if len(output) != 1:
+        raise Exception("output should be 1 but is" + str(len(output)))
+    return output[0]
     #preds = model.predict(image_makeup(img_path)[0])
-    imgs_list = clean_up_predictions(preds)
-    imgs_list[0].show()
-    return imgs_list 
+    #imgs_list = clean_up_predictions(preds)
+    #imgs_list[0].show()
 
+def predict_all(model: keras.Model, img_glob: str, threshold = 0.1) -> list[Image]:
+    files = glob.glob(img_glob)
+    return [predict(model, file, threshold) for file in files]
 
+def predict_overlay(model: keras.Model, img_path: str, threshold = 0.1) -> Image:
+    pred = predict(model, img_path, threshold).convert("RGB")
+    pred.putalpha(0)
+    pixels = list(pred.getdata())
+    for i, p in enumerate(pixels):
+        if p[0] == 255:
+            pixels[i] = (255,0,0, 128)
+    pred.putdata(pixels)
+    print(np.unique(np.array(pred)))
+    input = Image.open(img_path)
+    input.paste(pred, mask=pred)
+    return input
 
-
+def predict_all_overlay(model: keras.Model, img_glob: str, threshold = 0.1) -> list[Image]:
+    files = glob.glob(img_glob)
+    return [predict_overlay(model, file, threshold) for file in files]
