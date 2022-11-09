@@ -10,8 +10,8 @@ from keras.layers import BatchNormalization
 warnings.filterwarnings('ignore')
 
 
-def create_callbacks(backup_model_path: str) -> tuple[any,any,any]:
-    from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+def create_callbacks(backup_model_path: str, csv_log_path: str) -> tuple[any,any,any, any]:
+    from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau, CSVLogger
 
     checkpointer = ModelCheckpoint(backup_model_path,
                                    monitor="val_loss",
@@ -31,7 +31,9 @@ def create_callbacks(backup_model_path: str) -> tuple[any,any,any]:
                                    verbose=1,
                                    min_delta=1e-4)
 
-    return checkpointer, earlystopper, lr_reducer
+    history_logger = CSVLogger(csv_log_path, append=True)
+
+    return checkpointer, earlystopper, lr_reducer, history_logger
 
 
 def create_model(image_height: int, image_width: int, dropout_factor: float = 1., filter_factor: int = 1) -> Model:
