@@ -40,27 +40,30 @@ def clean_up_predictions(preds) -> list:
         imgs.append(image)
     return imgs
 
-def predict(model: keras.Model, img_path: str, threshold = 0.1) -> Image:
+def predict_from_path(model: keras.Model, img_path: str, threshold = 0.1) -> Image:
     img = np.array(Image.open(img_path).convert("RGB"))
+    return predict(model, img, threshold)
+    #preds = model.predict(image_makeup(img_path)[0])
+    #imgs_list = clean_up_predictions(preds)
+    #imgs_list[0].show()
+
+def predict(model: keras.Model, img:np.ndarray, threshold=0.1) -> Image:
     normalized = img.reshape((1, IMG_WIDTH, IMG_HEIGHT, CHANNELS)) / 255
 
     preds = model.predict(normalized)
 
     preds[preds > threshold] = 255
-    output = [Image.fromarray(pred.reshape((512,512))) for pred in preds]
+    output = [Image.fromarray(pred.reshape((512, 512))) for pred in preds]
     if len(output) != 1:
         raise Exception("output should be 1 but is" + str(len(output)))
     return output[0]
-    #preds = model.predict(image_makeup(img_path)[0])
-    #imgs_list = clean_up_predictions(preds)
-    #imgs_list[0].show()
 
-def predict_all(model: keras.Model, img_glob: str, threshold = 0.1) -> list[Image]:
+def predict_all_from_path(model: keras.Model, img_glob: str, threshold = 0.1) -> list[Image]:
     files = glob.glob(img_glob)
-    return [predict(model, file, threshold) for file in files]
+    return [predict_from_path(model, file, threshold) for file in files]
 
 def predict_overlay(model: keras.Model, img_path: str, threshold = 0.1) -> Image:
-    pred = predict(model, img_path, threshold).convert("RGB")
+    pred = predict_from_path(model, img_path, threshold).convert("RGB")
     pred.putalpha(0)
     pixels = list(pred.getdata())
     for i, p in enumerate(pixels):
