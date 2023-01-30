@@ -58,22 +58,37 @@ def predict(model: keras.Model, img:np.ndarray, threshold=0.1) -> Image:
         raise Exception("output should be 1 but is" + str(len(output)))
     return output[0]
 
+def evaluate(model: keras.Model, img:np.ndarray) -> Image:
+    normalized = img.reshape((1, IMG_WIDTH, IMG_HEIGHT, CHANNELS)) / 255
+
+    metrics = model.evaluate(normalized, batch_size=4)
+
+    return metrics
+
+def evaluate_from_path(model: keras.Model, img_path: str) -> Image:
+    img = np.array(Image.open(img_path).convert("RGB"))
+    return evaluate(model, img)
+
+
 def predict_all_from_path(model: keras.Model, img_glob: str, threshold = 0.1) -> list[Image]:
     files = glob.glob(img_glob)
     return [predict_from_path(model, file, threshold) for file in files]
 
-def predict_overlay(model: keras.Model, img_path: str, threshold = 0.1) -> Image:
-    pred = predict_from_path(model, img_path, threshold).convert("RGB")
+def predict_overlay(model: keras.Model, img: np.ndarray, threshold = 0.1, color=(255,0,0, 128)) -> Image:
+    pred = predict(model, img, threshold).convert("RGB")
     pred.putalpha(0)
     pixels = list(pred.getdata())
     for i, p in enumerate(pixels):
         if p[0] == 255:
-            pixels[i] = (255,0,0, 128)
+            pixels[i] = color
     pred.putdata(pixels)
-    print(np.unique(np.array(pred)))
-    input = Image.open(img_path)
+    input = Image.fromarray(img, 'RGB')
     input.paste(pred, mask=pred)
     return input
+
+def predict_overlay_from_path(model: keras.Model, img_path: str, threshold = 0.1) -> Image:
+    img = np.array(Image.open(img_path).convert("RGB"))
+    return predict_overlay(model, img, threshold=threshold)
 
 def predict_all_overlay(model: keras.Model, img_glob: str, threshold = 0.1) -> list[Image]:
     files = glob.glob(img_glob)
