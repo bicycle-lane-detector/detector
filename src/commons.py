@@ -7,8 +7,6 @@ from matplotlib import pyplot as plt
 
 from advanced_img_aug import Augmentor
 
-transformer = Augmentor(0.3)
-
 def save_model(model: keras.Model, model_path: str, csv_history_path_to_delete: str):
 
     print("Time of saving model:", datetime.datetime.now())

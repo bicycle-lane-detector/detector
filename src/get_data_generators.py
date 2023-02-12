@@ -70,7 +70,7 @@ def getDataGenerators(augmentation_parameters, img_size, train_images_path=None,
     if train_images_path and train_targets_path:
 
         use_aug = augmentation_parameters["use_aug"]
-        val_split = 0.33 #float(augmentation_parameters["validation_split"])
+        val_split = float(augmentation_parameters["validation_split"])
     
         train_ds: tf.data.Dataset = image_dataset_from_directory(train_images_path,
                                                 label_mode=None, 
@@ -117,7 +117,6 @@ def getDataGenerators(augmentation_parameters, img_size, train_images_path=None,
         if use_aug:
             aug = Augmentor(seed=seed)
             def augment(x, y):
-
                 x, y = aug.batch_augment_x_y(aug.batch_augment_x(x), y)
                 return np.array([x, y])
 
@@ -125,7 +124,7 @@ def getDataGenerators(augmentation_parameters, img_size, train_images_path=None,
                 res = tf.numpy_function(func=augment, inp=[x, y], Tout=tf.float32)
                 return res[0], res[1]
 
-            train = train.map(wrap_numpy)#, num_parallel_calls=tf.data.AUTOTUNE)
+            train = train.map(wrap_numpy, num_parallel_calls=tf.data.AUTOTUNE)
 
         val = val.prefetch(tf.data.AUTOTUNE)
         train = train.prefetch(tf.data.AUTOTUNE)

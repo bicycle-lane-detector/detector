@@ -28,20 +28,12 @@ class Augmentor:
 
     def batch_augment_x(self, img_batch: np.ndarray):
         for i in range(0, img_batch.shape[0]):
-            img_batch[i,...] = self.augment_x(img_batch[i,...].astype('uint8'))
+            img_batch[i, ...] = self.augment_x(img_batch[i, ...].astype('uint8'))
         return img_batch
 
     def batch_augment_x_y(self, img_batch: np.ndarray, mask_batch: np.ndarray):
         for i in range(0, img_batch.shape[0]):
-            print("ITERATION XY BEFORE", i)
-            print(np.unique(img_batch[i, ...]), img_batch[i, ...].shape)
-            print("Y", i)
-            print(np.unique(mask_batch[i, ...]), mask_batch[i, ...].shape)
-            img_batch[i,...], mask_batch[i,...] = self.augment_x_y(img_batch[i,...].astype('uint8'), mask_batch[i,...])
-            print("ITERATION XY AFTER", i)
-            print(np.unique(img_batch[i, ...]), img_batch[i, ...].shape)
-            print("Y", i)
-            print(np.unique(mask_batch[i, ...]), mask_batch[i, ...].shape)
+            img_batch[i, ...], mask_batch[i, ...] = self.augment_x_y(img_batch[i, ...].astype('uint8'), mask_batch[i, ...])
         return img_batch, mask_batch
 
     def augment_x(self, img: np.ndarray) -> np.ndarray:
