@@ -5,6 +5,9 @@ import numpy as np
 import glob
 from matplotlib import pyplot as plt
 
+from advanced_img_aug import Augmentor
+
+transformer = Augmentor(0.3)
 
 def save_model(model: keras.Model, model_path: str, csv_history_path_to_delete: str):
 
@@ -45,29 +48,18 @@ def train_val_generator(IMAGE_WIDTH: int, IMAGE_HEIGHT: int, ROOT: str, TRAIN_DI
     import get_data_generators
 
     no_augmentation = {
-        "rotation_range": 0,
-        "width_shift_range": 0,
-        "height_shift_range": 0,
-        "fill_mode": "constant",
-        "cval": 0,
-        "horizontal_flip": "False",
-        "vertical_flip": "False",
+        "use_aug": use_aug,
         "validation_split": 0.08
     }
 
     augmentation = {
-        "rotation_range": 90,
-        "width_shift_range": 0.1,
-        "height_shift_range": 0.1,
-        "fill_mode": "constant",
-        "cval": 0,
-        "horizontal_flip": "True",
-        "vertical_flip": "True",
+        "use_aug": use_aug,
         "validation_split": 0.08
     }
 
     if not use_aug:
         augmentation = no_augmentation
+    
     train, val = get_data_generators.getDataGenerators(augmentation, (IMAGE_WIDTH, IMAGE_HEIGHT),
                                                                ROOT + TRAIN_DIR + "Images", ROOT + TRAIN_DIR + "Masks",
                                                                batch_size=BATCH_SIZE, seed=seed)

@@ -6,22 +6,27 @@ Function: Builds and returns data generators.
 Author: Jerin Paul (https://github.com/Paulymorphous)
 Website: https://www.livetheaiexperience.com/
 """
-
+import keras
 from keras.preprocessing.image import ImageDataGenerator
+from keras.utils import image_dataset_from_directory
+from advanced_img_aug import Augmentor
+from keras import layers
+import tensorflow as tf
+import numpy as np
 
 class Generator:
     """ Data goes into keras and samples is the number of samples. samples per batch = size / batch_size"""
-    data: zip
+    data: tf.data.Dataset
     samples: int
     samplesPerBatch: any
 
-    def __init__(self, data: zip, samples: int, batch_size: int):
+    def __init__(self, data: tf.data.Dataset, samples: int, batch_size: int):
         self.data = data
         self.samples = samples
-        self.samplesPerBatch = samples / batch_size
+        self.samplesPerBatch = samples 
 
 
-def getDataGenerators(augmentation_parameters, img_size, train_images_path=None, train_targets_path=None, test_images_path=None, test_targets_path=None, batch_size = 64, seed=42, preprocess_function: any = None) -> list[Generator]:
+def getDataGenerators(augmentation_parameters, img_size, train_images_path=None, train_targets_path=None, test_images_path=None, test_targets_path=None, batch_size = 64, seed=42) -> list[Generator]:
     """
         Builds and returns ImageDataGenerators based on the paths that are sepcified.
         Each Generator will have data and size. Data goes int
@@ -57,112 +62,101 @@ def getDataGenerators(augmentation_parameters, img_size, train_images_path=None,
                                             )
     """
 
+
     generators = []
 
     normalize255 = lambda a : a/255
-
-    preprocess_masks = (lambda a: preprocess_function(normalize255(a))) if preprocess_function is not None else normalize255
-
-    def get_boolean(string):
-        if string == "True":
-            return True
-        elif string == "False":
-            return False
        
     if train_images_path and train_targets_path:
 
-        train_datagen = ImageDataGenerator(
-                                            preprocessing_function=preprocess_function,
-                                            #featurewise_center=get_boolean(augmentation_parameters["featurewise_center"]),
-                                            #samplewise_center=get_boolean(augmentation_parameters["samplewise_center"]),
-                                            #featurewise_std_normalization=get_boolean(augmentation_parameters["featurewise_std_normalization"]),
-                                            #samplewise_std_normalization=get_boolean(augmentation_parameters["samplewise_std_normalization"]),
-                                            # zca_whitening=get_boolean(augmentation_parameters["zca_whitening"]),
-                                            # zca_epsilon=float(augmentation_parameters["zca_epsilon"]),
-                                            rotation_range=float(augmentation_parameters["rotation_range"]),
-                                            width_shift_range=float(augmentation_parameters["width_shift_range"]),
-                                            height_shift_range=float(augmentation_parameters["height_shift_range"]),
-                                            # shear_range=float(augmentation_parameters["shear_range"]),
-                                            # zoom_range=float(augmentation_parameters["zoom_range"]),
-                                            # channel_shift_range=float(augmentation_parameters["channel_shift_range"]),
-                                            fill_mode=augmentation_parameters["fill_mode"],
-                                            cval=float(augmentation_parameters["cval"]),
-                                            horizontal_flip=get_boolean(augmentation_parameters["horizontal_flip"]),
-                                            vertical_flip=get_boolean(augmentation_parameters["vertical_flip"]),
-                                            #rescale=float(augmentation_parameters["rescale"]),
-                                            validation_split = float(augmentation_parameters["validation_split"])
-                                           )
-
-        train_image_generator = train_datagen.flow_from_directory(
-                                                                 directory = train_images_path,
-                                                                 batch_size = batch_size,
-                                                                 target_size=img_size,
-                                                                 class_mode=None,
-                                                                 subset = 'training',
-                                                                 seed = seed
-                                                                )
-
-        validation_image_generator = train_datagen.flow_from_directory(
-                                                                           directory = train_images_path,
-                                                                           batch_size = batch_size,
-                                                                           class_mode=None,
-                                                                           target_size=img_size,
-                                                                           subset = 'validation',
-                                                                           seed = seed
-                                                                      )
-
-        train_datagen.preprocessing_function = normalize255
-
-        train_target_generator = train_datagen.flow_from_directory( target_size= img_size,
-                                                                 directory = train_targets_path,
-                                                                 batch_size = batch_size,
-                                                                 class_mode=None,
-                                                                 subset = 'training',
-                                                                 seed = seed
-                                                                )
-
-
-
-
-        validation_target_generator = train_datagen.flow_from_directory( target_size= img_size,
-                                                                           directory = train_targets_path,
-                                                                           batch_size = batch_size,
-                                                                           class_mode=None,
-                                                                           subset = 'validation',
-                                                                           seed = seed,
-                                                                    )
-
-        train_generator = zip(train_image_generator, train_target_generator)
-        validation_generator = zip(validation_image_generator, validation_target_generator)
+        use_aug = augmentation_parameters["use_aug"]
+        val_split = 0.33 #float(augmentation_parameters["validation_split"])
+    
+        train_ds: tf.data.Dataset = image_dataset_from_directory(train_images_path,
+                                                label_mode=None, 
+                                                subset='training',
+                                                image_size=img_size,
+                                                batch_size=batch_size, 
+                                                seed=seed,
+                                                validation_split=val_split
+                                                )
         
-        generators.extend([Generator(train_generator, train_image_generator.samples, train_image_generator.batch_size),
-                           Generator(validation_generator, validation_image_generator.samples, validation_image_generator.batch_size)])
+        val_ds: tf.data.Dataset = image_dataset_from_directory(train_images_path,
+                                                label_mode=None, 
+                                                subset='validation',
+                                                image_size=img_size,
+                                                batch_size=batch_size, 
+                                                seed=seed,
+                                                validation_split=val_split
+                                                )
+        
+        train_target_ds: tf.data.Dataset = image_dataset_from_directory(train_targets_path,
+                                                label_mode=None, 
+                                                subset='training',
+                                                image_size=img_size,
+                                                batch_size=batch_size, 
+                                                seed=seed,
+                                                validation_split=val_split
+                                                )
+        
+        val_target_ds: tf.data.Dataset = image_dataset_from_directory(train_targets_path,
+                                                label_mode=None, 
+                                                subset='validation',
+                                                image_size=img_size,
+                                                batch_size=batch_size, 
+                                                seed=seed,
+                                                validation_split=val_split
+                                                )
+
+        val_target_ds = val_target_ds.map(normalize255)
+        train_target_ds = train_target_ds.map(normalize255)
+
+        val = tf.data.Dataset.zip((val_ds, val_target_ds))
+        train = tf.data.Dataset.zip((train_ds, train_target_ds))
+
+        if use_aug:
+            aug = Augmentor(seed=seed)
+            def augment(x, y):
+
+                x, y = aug.batch_augment_x_y(aug.batch_augment_x(x), y)
+                return np.array([x, y])
+
+            def wrap_numpy(x, y):
+                res = tf.numpy_function(func=augment, inp=[x, y], Tout=tf.float32)
+                return res[0], res[1]
+
+            train = train.map(wrap_numpy)#, num_parallel_calls=tf.data.AUTOTUNE)
+
+        val = val.prefetch(tf.data.AUTOTUNE)
+        train = train.prefetch(tf.data.AUTOTUNE)
+
+        generators.extend([Generator(train, train_ds.cardinality().numpy(), batch_size),
+                           Generator(val, val_ds.cardinality().numpy(), batch_size)])
 
     
     if test_images_path and  test_targets_path:
 
-        test_datagen = ImageDataGenerator(preprocessing_function=preprocess_function)
+        test_ds: tf.data.Dataset = image_dataset_from_directory(test_images_path,
+                                                                      label_mode=None,
+                                                                      image_size=img_size,
+                                                                      batch_size=batch_size,
+                                                                      shuffle=False,
+                                                                      seed=seed,
+                                                                      )
 
-        test_image_generator = test_datagen.flow_from_directory( target_size= img_size,
-                                                                  directory = test_images_path,
-                                                                  batch_size = batch_size,
-                                                                  class_mode=None,
-                                                                  shuffle = False,
-                                                                  seed = seed
-                                                              )
+        test_target_ds: tf.data.Dataset = image_dataset_from_directory(test_targets_path,
+                                                                      label_mode=None,
+                                                                      image_size=img_size,
+                                                                      batch_size=batch_size,
+                                                                      shuffle=False,
+                                                                      seed=seed,
+                                                                      )
 
-        test_datagen.preprocessing_function = normalize255
+        test_target_ds = test_target_ds.map(normalize255)
 
-        test_target_generator = test_datagen.flow_from_directory( target_size= img_size,
-                                                                  directory = test_targets_path,
-                                                                  batch_size = batch_size,
-                                                                  class_mode=None,
-                                                                  shuffle = False,
-                                                                  seed = seed
-                                                              )
-        test_generator = zip(test_image_generator, test_target_generator)
+        test_generator = tf.data.Dataset.zip((test_ds, test_target_ds)).prefetch(tf.data.AUTOTUNE)
 
-        generators.append(Generator(test_generator, test_image_generator.samples, test_image_generator.batch_size))
+        generators.append(Generator(test_generator, test_ds.cardinality().numpy(), batch_size))
     
     if generators:
         
