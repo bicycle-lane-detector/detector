@@ -21,13 +21,13 @@ def create_callbacks(backup_model_path: str, csv_log_path: str) -> tuple[any,any
 
     earlystopper = EarlyStopping(monitor='val_loss',
                                  min_delta=0,
-                                 patience=7,
+                                 patience=4,
                                  verbose=1,
                                  restore_best_weights=True)
 
     lr_reducer = ReduceLROnPlateau(monitor='val_loss',
                                    factor=0.1,
-                                   patience=5,
+                                   patience=3,
                                    verbose=1,
                                    min_delta=1e-4)
 
