@@ -47,8 +47,8 @@ def predict_from_path(model: keras.Model, img_path: str, threshold = 0.1) -> Ima
     #imgs_list = clean_up_predictions(preds)
     #imgs_list[0].show()
 
-def predict(model: keras.Model, img:np.ndarray, threshold=0.1) -> Image:
-    normalized = img.reshape((1, IMG_WIDTH, IMG_HEIGHT, CHANNELS)) / 255
+def predict(model: keras.Model, img:np.ndarray, threshold=0.1, color=False) -> Image:
+    normalized = img.reshape((1, IMG_WIDTH, IMG_HEIGHT, CHANNELS)) / (1 if color else 255)
 
     preds = model.predict(normalized)
 
