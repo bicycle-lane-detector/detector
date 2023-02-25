@@ -18,5 +18,5 @@ def tif_to_png(directory):
             png_file = png_directory / (tif_file.stem + '.png')
             img.save(png_file, 'PNG')
 
-tif_to_png("./../../Data/all-cities/_Test512/Images/samples")
-tif_to_png("./../../Data/all-cities/_Train512/Images/samples")
+tif_to_png("./../../Data/wolfsburg/_Test512/Images/samples")
+tif_to_png("./../../Data/wolfsburg/_Train512/Images/samples")
