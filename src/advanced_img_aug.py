@@ -55,7 +55,7 @@ def _to_disk(buf, name):
     
 
 def example_augmentations(which: Literal['one_by_one', 'all'] = 'one_by_one'):
-    sample_image = np.array(Image.open("Data/karlsruhe/_Test512/Images/samples/149_karlsruhe.png"))
+    sample_image = np.array(Image.open("Data/karlsruhe-small/_Test512/Images/samples/149_karlsruhe.png"))
     random.seed(1337)
     prob = 1
     if which == 'all':
@@ -82,6 +82,6 @@ def example_augmentations(which: Literal['one_by_one', 'all'] = 'one_by_one'):
         _to_disk(res, name)
 
 # a = AdvancedAugmentor()
-# sample_image = np.array(Image.open("Data/karlsruhe/_Test512/Images/samples/149_karlsruhe.png"))
+# sample_image = np.array(Image.open("Data/karlsruhe-small/_Test512/Images/samples/149_karlsruhe.png"))
 # for i in range(50):
 #     _to_disk(a.augment(sample_image), f"_{i}")

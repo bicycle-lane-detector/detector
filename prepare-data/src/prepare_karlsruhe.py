@@ -51,8 +51,8 @@ def crop_and_save(images_path, masks_path, new_images_path, new_masks_path, img_
 
                 blank_mask[blank_mask > 1] = 255
 
-                if not np.any(blank_mask):
-                    continue
+                # if not np.any(blank_mask):
+                #     continue
                 
                 cv2.imwrite(new_image_path, blank_image)
                 cv2.imwrite(new_mask_path, blank_mask)
@@ -104,7 +104,7 @@ def train_test_split(images_path, masks_path, extended_images, extended_masks, t
     print("Test Directory:", test_dir)
 
 if __name__ == "__main__":
-    root_data_path = "./Data/karlsruhe-small/"
+    root_data_path = "./Data/karlsruhe/"
     img_width = img_height = 256 * 2 #* 2
     num_channels = 3
 
